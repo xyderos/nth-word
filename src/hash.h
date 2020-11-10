@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <time.h>
-//hash.c
+
 unsigned int getPrime();
 
 unsigned int hash(unsigned int, char*);

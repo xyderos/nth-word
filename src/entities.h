@@ -12,9 +12,9 @@ typedef struct __attribute__((packed)) __entry {
 
 typedef struct __table {
 
-  int size;
+  unsigned int size;
 
-  int usedEntries;
+  unsigned int usedEntries;
 
   entry_t *entries;
 

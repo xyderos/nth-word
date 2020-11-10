@@ -1,13 +1,12 @@
 #include <stdlib.h>
-
 #include "entities.h"
 
-static inline int  less(int,int);
+int       less(int,int);
 
-static inline void swap(entry_t*,entry_t*);
+void      swap(entry_t*,entry_t*);
 
-static inline void isort(table_t*,int,int);
+void      isort(table_t*,int,int);
 
-static inline int  partition(table_t*,int,int);
+int       partition(table_t*,int,int);
 
-static inline void quicksort(table_t*,int,int);
+void      quicksort(table_t*,int,int);

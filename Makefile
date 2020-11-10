@@ -1,26 +1,26 @@
 CC 		 	:= clang
-CFLAGS	:= -g -Wall -Wextra -O3
+CFLAGS	:= -fsanitize=address -fno-omit-frame-pointer -Wall -Wextra -O3 -g
 SRC			:= src
 BIN     := tsk
 LIBS		:= -lm
 OBJS		:=
-TARGET	:= dev
+TARGET	:= prod
 ENTITIES:= src/entities.h
 OBJDIR	:= obj
 
 ifeq ($(TARGET), dev)
-	OBJS :=$(addprefix $(OBJDIR)/,hash.o table.o tsk.o)
+	OBJS :=$(addprefix $(OBJDIR)/,hash.o table.o)
 else
-	OBJS :=$(addprefix $(OBJDIR)/,hash.o table.o tsk.o, qsort.o)
+	OBJS :=$(addprefix $(OBJDIR)/,hash.o table.o tsk.o)
 endif
 
-$(BIN): DIRECTORIES $(OBJS) $(SRC)/$(BIN).c
+$(BIN): directories $(OBJS) $(SRC)/$(BIN).c
 	$(CC) $(CFLAGS) $(OBJS) -o $(TARGET) $(LIBS)
 
 $(OBJDIR) $(OBJDIR)/%.o: $(SRC)/%.c $(SRC)/%.h $(ENTITIES)
 	$(CC) $(CFLAGS) -c $< -o $@
 
-DIRECTORIES:
+directories:
 	mkdir -p $(OBJDIR)
 
 clean:

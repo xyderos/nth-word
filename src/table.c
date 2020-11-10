@@ -1,127 +1,160 @@
 #include "table.h"
+#include "entities.h"
+#include <stdio.h>
+#include <stdlib.h>
 
-static inline entry_t* entryInit(const char* const value){
+//initialise a new entry
+entry_t* entryInit(const char* const value){
 
   unsigned int len   = strlen(value);
-  entry_t* entry     = malloc(sizeof(entry));
-  entry->value       = malloc(sizeof(char*) * len);
-  strncpy(entry->value, value, strlen(value));
+  entry_t* entry     = malloc(sizeof(entry_t));
+  entry->value       = calloc(len, sizeof(char));
   entry->exists      = 1;
   entry->occurence   = 1;
 
   return entry;
-
 }
 
+//initialise a table
 table_t* tableInit(const unsigned int size){
 
   table_t* table     = malloc(sizeof(table_t));
-  table->entries     = malloc(size*sizeof(entry_t));
+  table->entries     = calloc(size,sizeof(entry_t));
   table->seed        = getPrime();
   table->size        = size;
   table->usedEntries = 0U;
 
   return table;
-
 }
 
-table_t* tableResize(const table_t* const table, const unsigned int newSize){
+//insert an item into a table
+unsigned int tableInsert(table_t* table,const char* const value){
 
-  printf("resizing the table \n");
-  if(table->size > newSize) return NULL;
-
-  table_t* newTable     = tableInit(newSize);
-  newTable->seed        = table->seed;
-  newTable->usedEntries = table->usedEntries;
-  entry_t* temp;
-
-  //we iterate over the new table and we reinsert with the new hash code
-  for (int i = 0; i < newTable->size; ++i){
-
-    temp = &table->entries[i];
-
-    //entry from the previous table exists, we rehash and keep the occurences
-    if(temp->exists == 1) tableCopyEntry(newTable,temp);
-
-  }
-
-  tableDestroy(table);
-
-  return newTable;
-
-}
-
-void tableCopyEntry(table_t* newTable, entry_t* previousEntry) {
-
-  entry_t* entry = NULL;
-  unsigned int index;
-  auto int position = 0;
-
-  while(position != newTable->size){
-
-    index = hashString(newTable->seed,previousEntry->value,newTable->size, position);
-    entry = &newTable->entries[index];
-
-    if(entry->exists == 0){
-
-      *entry = *entryInit(previousEntry->value);
-      entry->occurence = previousEntry->occurence;
-      free(previousEntry);
-
-      return;
-
-    } else{
-
-      position++;
-
-      continue;
-    }
-  }
-}
-
-void tableInsert(table_t* table,const char* const value){
-
+  unsigned int cutoff = (unsigned int)( 2 * (table->size / 2));
   //decide when to resize, might create a large enough array to bloat the memory?
-  if(table->usedEntries >= table->size/2 ) table = tableResize(table, table->size*2);
+  if(table->usedEntries >= cutoff ) tableResize(table, table->size*2);
 
   entry_t* entry = NULL;
   unsigned int index;
-  auto int position = 0;
-  printf("Inserting  : %s :  " , value);
+  auto unsigned int position = 0;
 
   while(position != table->size){
 
-    //calculate the hash of our string as a function of the current position on the table
-    index = hashString(table->seed,value,table->size, position); 
-    printf("with hash number  %d . \n", index);
+    //calculate hash of the string based on linear probing
+    index = hashString(table->seed,value,table->size, position);
+    //retrieve the entry of the table to check wether it exists or not
     entry = &table->entries[index];
-    printf(" The value of this entry is %s . \n", entry->value);
 
+    //entry doesnt exist so we write to them
     if(entry->exists == 0){
 
-      printf(" It doesnt exist, so we create a new entry. \n");
       *entry = *entryInit(value);
       table->usedEntries++;
-      break;
+      return index;
 
-    } else if (entry->exists == 1 && strcmp(entry->value, value) == 0){
-
-      printf(" It exists, so we increment its occurence. \n");
-      entry->occurence++;
-      break;
-
-    } else{
-      printf(" Entry exists and is a different word, go to the next iteration. \n");
-      position++;
     }
+
+    //item exists, might as well write on the position
+    if(strcmp(entry->value, value) == 0){
+
+      entry->occurence++;
+      return index;
+
+    }
+    position++;
   }
+  return -1;
 }
 
-static inline void tableDestroy(const table_t* const table){
+//resize the table given, rehash all the items with the new linear probe
+void tableResize(table_t *table, const unsigned int newSize) {
 
-  for (auto int i = 0; i < table->size; ++i)
-    if(&table->entries[i] !=NULL)free(&table->entries[i]);
+  // most likely wont happen but if there is an overflow then we have a problem
+  if (table->size > newSize)
+    return;
+
+  // temp table that we store the results
+  table_t *temp = tableInit(newSize);
+
+  // copy the seed
+  temp->seed = table->seed;
+
+  // iterator-like entry
+  entry_t *iterator;
+  // index for the hash table
+  unsigned int pos = 0;
+  unsigned int index = 0;
+
+  while (pos != table->size) {
+
+    // get entry of the old table
+    iterator = &table->entries[pos];
+    // if it exists write it to the new table
+    if (iterator->exists == 1) {
+
+      index = tableInsert(temp, iterator->value);
+      temp->entries[index].occurence = iterator->occurence;
+    }
+    pos++;
+  }
+
+  free(table->entries);
+
+  table->entries = temp->entries;
+
+  table->size = temp->size;
+
+  table->usedEntries = temp->usedEntries;
+
+}
+
+int compFunc(const void *const a, const void *const b) {
+
+  entry_t* t1 = (entry_t*)a;
+
+  entry_t* t2 = (entry_t*)b;
+
+  if(t1->exists==0 && t2->exists == 0){
+    printf("both uninitialised , return 0 \n");
+    return 0;
+  }
+  else if(t1->exists==1 && t2->exists == 0){
+
+    printf("2nd entry doesnt exist, return -1 \n");
+    return -1;
+
+  }
+  else if(t1->exists == 0 && t2->exists == 1){
+
+    printf("1st entry doesnt exist, return -1 \n");
+    return -1;
+
+  }
+  else return t1->occurence - t2->occurence;
+}
+
+void tableSort(table_t *table){
+
+  qsort(table, table->size, sizeof(entry_t),compFunc);
+
+}
+
+// destroy a table, rule of thumb, call free for every malloc
+void tableDestroy(table_t *table) {
+
+  entry_t *entry = NULL;
+
+  for (auto unsigned int i = 0; i < table->size; i++) {
+
+    entry = &table->entries[i];
+
+    if (entry->exists == 1) {
+
+      free(entry->value);
+
+      free(entry);
+    }
+  }
 
   free(table);
-
 }

@@ -31,7 +31,7 @@ unsigned int hash(unsigned int seed ,char* key){
 //iterable hashing with linnear probing, good for ascii english words
 unsigned int hashString(const unsigned int seed, const char* const key, unsigned int tableSize, unsigned int iteration){
 
-  unsigned int position = hash(seed, key);
+  unsigned int position = hash(seed, (char*)key);
 
   position = position + iteration * (position * 2 + 1);
 

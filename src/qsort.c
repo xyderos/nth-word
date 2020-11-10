@@ -1,12 +1,12 @@
 #include "qsort.h"
 
-static inline int less(int a, int b){
+int less(int a, int b){
 
   return (a<b) ? 1 : 0 ;
 
 }
 
-static inline void swap(entry_t* a,entry_t* b){
+void swap(entry_t* a,entry_t* b){
 
   entry_t* c = a;
 
@@ -16,7 +16,7 @@ static inline void swap(entry_t* a,entry_t* b){
 
 }
 
-static inline void isort(table_t * table, int l, int h){
+void isort(table_t * table, int l, int h){
 
   for(int i = l; i< h; i++)
     for(int j = i; j > l && less(table->entries[j].occurence, table->entries[j-1].occurence); j-- )
@@ -24,7 +24,7 @@ static inline void isort(table_t * table, int l, int h){
 
 }
 
-static inline int partition(table_t* arr, int l, int h){
+int partition(table_t* arr, int l, int h){
 
   int i =l;
 
@@ -49,7 +49,7 @@ static inline int partition(table_t* arr, int l, int h){
 
 }
 
-static inline void quicksort(table_t* arr, int l, int h){
+void quicksort(table_t* arr, int l,int h){
 
   if(h<l)return;
 
