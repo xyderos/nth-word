@@ -18,3 +18,5 @@ int                 compFunc(const void * const, const void* const);
 void                tableSort(table_t*);
 
 void                tableDestroy(table_t*);
+
+void                cleanupTable(table_t*);

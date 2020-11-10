@@ -34,13 +34,12 @@ void readFromFile(const char* const fileName, table_t* table){
 
     while(token !=NULL) {
 
-      tableInsert(table, token);
+      if(strlen(token) > 2 && token[0] != ' ') tableInsert(table, token);
 
       token = strtok(NULL, DELIMS);
     }
   }
 }
-
 
 int main(int argc, char** argv){
 
@@ -59,6 +58,12 @@ int main(int argc, char** argv){
   double elapsedTime = ((double)t)/CLOCKS_PER_SEC;
 
   printf("The table was built in %lf . \n", elapsedTime);
+
+  printf("The table has %d used entries and its size is %d . \n", table->usedEntries, table->size);
+
+  printf("Cleaning up the table from NULL references to pass it to quicksort. \n");
+
+  cleanupTable(table);
 
   printf("Sorting the Table using quick sort. \n");
 

@@ -3,7 +3,7 @@
 #include <time.h>
 #include "table.h"
 
-static const char* const DELIMS = ", \' \" . ! ?  @ $ % ^ & * ; ";
+static const char* const DELIMS = ",  \" . ! ?  @ $ % ^ & * ; 1 2 3 4 5 6 7 8 9 0 ( ) / - '  = _ i ~ ` > < : # + ";
 
 static inline void         kth(const table_t* const, const int);
 

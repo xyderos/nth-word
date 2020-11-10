@@ -2,13 +2,15 @@
 #include "entities.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 //initialise a new entry
 entry_t* entryInit(const char* const value){
 
-  unsigned int len   = strlen(value);
+  unsigned int len   = strlen(value) + 1;
   entry_t* entry     = malloc(sizeof(entry_t));
   entry->value       = calloc(len, sizeof(char));
+  strncpy(entry->value, value, len);
   entry->exists      = 1;
   entry->occurence   = 1;
 
@@ -30,9 +32,9 @@ table_t* tableInit(const unsigned int size){
 //insert an item into a table
 unsigned int tableInsert(table_t* table,const char* const value){
 
-  unsigned int cutoff = (unsigned int)( 2 * (table->size / 2));
+  unsigned int cutoff = (unsigned int)(2*(table->size / 3));
   //decide when to resize, might create a large enough array to bloat the memory?
-  if(table->usedEntries >= cutoff ) tableResize(table, table->size*2);
+  if( table->usedEntries >= cutoff ) tableResize(table, table->size*2);
 
   entry_t* entry = NULL;
   unsigned int index;
@@ -108,35 +110,43 @@ void tableResize(table_t *table, const unsigned int newSize) {
 
 }
 
-int compFunc(const void *const a, const void *const b) {
+void cleanupTable(table_t *table) {
+
+  table_t* temp = tableInit(table->usedEntries);
+
+  entry_t* tmp  = NULL;
+
+  unsigned int pos = 0, index = 0;
+
+  while(pos != table->size){
+
+    tmp = &table->entries[pos];
+
+    if(tmp->exists == 1 && tmp->value != NULL && tmp->value[0] != '\0' )temp->entries[index++] = *tmp;
+
+    pos++;
+  }
+
+  printf("%d %d \n", index, table->usedEntries);
+
+  free(table->entries);
+
+  table->size = index;
+
+  table->entries = temp->entries;
+}
+
+int compFunc(const void* a, const void* b) {
 
   entry_t* t1 = (entry_t*)a;
 
   entry_t* t2 = (entry_t*)b;
 
-  if(t1->exists==0 && t2->exists == 0){
-    printf("both uninitialised , return 0 \n");
-    return 0;
-  }
-  else if(t1->exists==1 && t2->exists == 0){
-
-    printf("2nd entry doesnt exist, return -1 \n");
-    return -1;
-
-  }
-  else if(t1->exists == 0 && t2->exists == 1){
-
-    printf("1st entry doesnt exist, return -1 \n");
-    return -1;
-
-  }
-  else return t1->occurence - t2->occurence;
+  return t2->occurence - t1->occurence;
 }
 
 void tableSort(table_t *table){
-
-  qsort(table, table->size, sizeof(entry_t),compFunc);
-
+  qsort(table->entries, table->size, sizeof(entry_t),compFunc);
 }
 
 // destroy a table, rule of thumb, call free for every malloc
@@ -148,13 +158,10 @@ void tableDestroy(table_t *table) {
 
     entry = &table->entries[i];
 
-    if (entry->exists == 1) {
+    free(entry->value);
 
-      free(entry->value);
-
-      free(entry);
-    }
   }
 
   free(table);
 }
+
